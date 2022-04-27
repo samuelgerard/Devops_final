@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  #db:
+    #image: postgres:14-alpine
+    #volumes:
+      #- ./data/db:/var/lib/postgresql/data
+    #env_file:
+      #- ./.env.dev
+    #ports:
+      #- "5432:5432"
+
+  #grpc:
+    #build:
+      #context: ./usercontent-servicer
+      #dockerfile: Dockerfile
+    #volumes:
+      #- ./usercontent-servicer/grpc-server:/etc/grpc-server
+    #env_file:
+      #- ./.env.dev
+    #network_mode: "service:redis"
+    #stdin_open: true
+    #tty: true
+    #depends_on:
+      #- redis
+        ##    command: sh -c "cd /etc/grpc-server/ && cmake . && make && sh -c 'while ./grpc_data_server; do echo Restarting GRPC Server; done'"
+    #command:
+      #- tmux
+      
+  web:
+    build: 
+      context: .
+    command: >
+      sh -c "python3 manage.py migrate &&
+             python3 manage.py wait_for_db
+             python3 manage.py runserver 0.0.0.0:8000"
+  #  rm -rf /devops_final/static"
+  #  uwsgi --ini dyad_uwsgi.ini"
+    volumes:
+      - ./devops_final:/devops_final
+    # env_file:
+    #   - ./.env.dev
+    ports:
+      - "8000:8000"
+
+  redis: 
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+      - "5442:5442"
+
+  # celery:
+  #   restart: always
+  #   build:
+  #     context: .
+  #   command: celery -A core worker -l info
+  #   volumes:
+  #   - ./code:/code
+  #   - /tmp/dyad:/tmp
+  #   env_file:
+  #     - ./.env.dev
+  #   depends_on:
+  #     - redis
+  #     - web
+
